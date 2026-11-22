@@ -108,6 +108,33 @@ public sealed class WorkflowTests : IClassFixture<ChangeFlowWebApplicationFactor
         Assert.Contains("InvalidState", await edit.Content.ReadAsStringAsync());
     }
 
+    [Fact]
+    public async Task Dual_role_user_cannot_approve_own_request()
+    {
+        var dualRoleClient = _factory.CreateClient();
+        var dualRoleToken = await IssueTokenAsync(dualRoleClient, DevelopmentSeed.DualRoleId);
+        dualRoleClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", dualRoleToken);
+
+        var created = await dualRoleClient.PostAsJsonAsync("/change-requests", new
+        {
+            title = "Dual role self approval",
+            description = "Test",
+            reason = "Test"
+        });
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var request = await created.Content.ReadFromJsonAsync<ChangeRequestResponse>();
+
+        var submitted = await dualRoleClient.PostAsJsonAsync($"/change-requests/{request!.Id}/submit",
+            new { concurrencyToken = request.ConcurrencyToken });
+        Assert.Equal(HttpStatusCode.OK, submitted.StatusCode);
+        var pending = await submitted.Content.ReadFromJsonAsync<ChangeRequestResponse>();
+
+        var approval = await dualRoleClient.PostAsJsonAsync($"/change-requests/{request.Id}/approve",
+            new { concurrencyToken = pending!.ConcurrencyToken });
+
+        Assert.Equal(HttpStatusCode.Forbidden, approval.StatusCode);
+    }
+
     private static async Task<string> IssueTokenAsync(HttpClient client, Guid userId)
     {
         var response = await client.PostAsJsonAsync("/development/tokens", new { userId });

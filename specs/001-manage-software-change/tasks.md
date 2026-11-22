@@ -207,6 +207,6 @@
 
 ## Phase 9: Convergence
 
-- [ ] T061 [US2] Add a dual-role Requester and Reviewer test proving own-request approval is rejected per FR-010 and SC-004 (partial).
-- [ ] T062 [US4] Add tests proving mutation-before-revocation and revocation-before-mutation ordering through the coordinated immediate transaction path per FR-018 (partial).
-- [ ] T063 Remove or justify the unrequested template WeatherForecast and UnitTest1 artifacts per plan scope and Constitution I (unrequested).
+- [x] T061 [US2] Add a dual-role Requester and Reviewer test proving own-request approval is rejected per FR-010 and SC-004 (partial).
+- [x] T062 [US4] Add tests proving mutation-before-revocation and revocation-before-mutation ordering through the coordinated immediate transaction path per FR-018 (partial).
+- [x] T063 Remove or justify the unrequested template WeatherForecast and UnitTest1 artifacts per plan scope and Constitution I (unrequested).
