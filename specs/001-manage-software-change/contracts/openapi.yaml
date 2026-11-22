@@ -1,0 +1,399 @@
+openapi: 3.0.3
+info:
+  title: ChangeFlow API
+  version: 1.0.0
+  description: HTTP API for managing software Change Requests.
+paths:
+  /change-requests:
+    post:
+      summary: Create a Change Request in Draft
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChangeRequest'
+      responses:
+        '201':
+          description: Draft created
+          headers:
+            Location:
+              description: URL of the created Change Request
+              schema:
+                type: string
+                example: /change-requests/8cc6f9eb-efc2-4d5d-a3ad-5f6cf8a8fd1e
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequest'
+        '400':
+          $ref: '#/components/responses/MalformedInput'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /change-requests/{id}:
+    get:
+      summary: View a Change Request
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChangeRequestId'
+      responses:
+        '200':
+          description: All approved view details returned to an eligible viewer, including the last change-request comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Edit an owned permitted request
+      description: A Requester may edit permitted fields, including Reason, for Draft or ChangesRequested requests.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChangeRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditChangeRequest'
+      responses:
+        '200':
+          description: Request edited; the response contains a new concurrency token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequest'
+        '400':
+          $ref: '#/components/responses/MalformedInput'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /change-requests/{id}/submit:
+    post:
+      summary: Submit a Draft or resubmit a ChangesRequested request
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChangeRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationRequest'
+      responses:
+        '200':
+          description: Request moved to PendingReview with a new concurrency token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequest'
+        '400':
+          $ref: '#/components/responses/MalformedInput'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /change-requests/{id}/approve:
+    post:
+      summary: Approve a PendingReview request
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChangeRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationRequest'
+      responses:
+        '200':
+          description: Request approved with a new concurrency token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequest'
+        '400':
+          $ref: '#/components/responses/MalformedInput'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /change-requests/{id}/request-changes:
+    post:
+      summary: Move a PendingReview request to ChangesRequested and replace the last change-request comment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ChangeRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestChanges'
+      responses:
+        '200':
+          description: Request moved to ChangesRequested; Reason is unchanged and the comment/concurrency token are updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequest'
+        '400':
+          $ref: '#/components/responses/MissingOrEmptyChangeComment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /development/tokens:
+    post:
+      summary: Development-only issuance of a signed local JWT
+      description: Available only in Development. Accepts a seeded UUID user ID; no registration or production identity provider.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DevelopmentTokenRequest'
+      responses:
+        '200':
+          description: Short-lived JWT issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevelopmentTokenResponse'
+        '400':
+          $ref: '#/components/responses/MalformedInput'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ChangeRequestId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    CreateChangeRequest:
+      type: object
+      required: [title, description, reason]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        reason:
+          type: string
+          minLength: 1
+    EditChangeRequest:
+      type: object
+      required: [title, description, reason, concurrencyToken]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        reason:
+          type: string
+          minLength: 1
+          description: Editable Requester reason for permitted Draft or ChangesRequested edits.
+        concurrencyToken:
+          type: string
+          format: uuid
+    MutationRequest:
+      type: object
+      required: [concurrencyToken]
+      properties:
+        concurrencyToken:
+          type: string
+          format: uuid
+    RequestChanges:
+      type: object
+      required: [concurrencyToken, comment]
+      properties:
+        concurrencyToken:
+          type: string
+          format: uuid
+        comment:
+          type: string
+          minLength: 1
+          description: Non-empty, server-trimmed Reviewer change-request comment.
+    ChangeRequest:
+      type: object
+      required: [id, title, description, reason, requesterId, status, concurrencyToken, lastChangeRequestComment]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        reason:
+          type: string
+          description: Requester's change reason; a Reviewer comment never overwrites it and a permitted edit may update it.
+        lastChangeRequestComment:
+          type: string
+          nullable: true
+          description: Latest non-empty Reviewer comment; replaced by later successful RequestChanges operations.
+        requesterId:
+          type: string
+          format: uuid
+          description: UUID matching JWT sub.
+        status:
+          type: string
+          enum: [Draft, PendingReview, ChangesRequested, Approved]
+        concurrencyToken:
+          type: string
+          format: uuid
+    DevelopmentTokenRequest:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: Seeded UUID identity for a Requester-only, Reviewer-only, or dual-role Development user.
+    DevelopmentTokenResponse:
+      type: object
+      required: [accessToken, expiresAt]
+      properties:
+        accessToken:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+    ProblemDetails:
+      type: object
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          type: string
+        detail:
+          type: string
+        instance:
+          type: string
+  responses:
+    MalformedInput:
+      description: JSON or field validation failed for malformed or invalid fields unrelated to the change comment
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    MissingOrEmptyChangeComment:
+      description: The RequestChanges comment is missing, empty, or whitespace-only
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            MissingOrEmptyChangeComment:
+              value:
+                type: https://changeflow.local/problems/missing-change-comment
+                title: Missing or empty change-request comment
+                status: 400
+                code: MissingOrEmptyChangeComment
+                detail: A non-empty comment is required.
+    Unauthorized:
+      description: Authentication is missing or invalid
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Forbidden:
+      description: Caller lacks the required view or mutation permission, or violates self-approval separation of duties
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    NotFound:
+      description: The resource is absent or not eligible for the caller to view
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Conflict:
+      description: Invalid state or stale concurrency token; stable code distinguishes the outcome
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            InvalidState:
+              value:
+                type: https://changeflow.local/problems/invalid-state
+                title: Invalid state
+                status: 409
+                code: InvalidState
+                detail: The Change Request is not in the state required for this operation.
+            ConcurrencyConflict:
+              value:
+                type: https://changeflow.local/problems/concurrency-conflict
+                title: Concurrency conflict
+                status: 409
+                code: ConcurrencyConflict
+                detail: The Change Request was modified after this caller obtained it.
+    InternalServerError:
+      description: Unexpected server or persistence failure
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
