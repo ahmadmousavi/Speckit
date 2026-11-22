@@ -8,6 +8,19 @@
 
 **Input**: User description: "Create a complete product specification for ChangeFlow, an HTTP API for managing software Change Requests."
 
+## Clarifications
+
+### Session 2026-11-22
+
+- Q: Should an authorized Reviewer be able to review every PendingReview request, or only requests assigned to that Reviewer? → A: All authorized Reviewers can review all PendingReview requests.
+- Q: Which requests can a user view if they are not authorized to modify that request? → A: Only Requesters and authorized Reviewers can view requests relevant to their workflow.
+- Decision: A user authorized to view a Change Request but not authorized to modify it can view all details of that request. View authorization and modification authorization are independent.
+- Q: Is a reason or comment required whenever a Reviewer requests changes? → A: A reason or comment is mandatory.
+- Q: Can a Requester modify a PendingReview request after submission, or must they wait until a Reviewer requests changes? → A: Requesters cannot modify PendingReview requests; they must wait for ChangesRequested.
+- Q: What should happen to pending Change Requests when a Requester's or Reviewer's role or permission is revoked? → A: Suspend pending-state operations immediately.
+- Q: Can an Approved request ever be revoked or reopened? → A: Approved requests cannot be revoked or reopened.
+- Q: Can a Requester delete a Change Request while it is in Draft? → A: Draft deletion is not allowed.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Create and Submit a Change Request (Priority: P1)
@@ -111,10 +124,10 @@ Invalid edits, transitions, identities, and stale updates are rejected without p
   and current status.
 - **FR-003**: A Requester MUST be able to edit their own Draft.
 - **FR-004**: A Requester MUST be able to submit their own Draft, changing it from Draft to PendingReview.
-- **FR-005**: An authorized Reviewer MUST be able to review a PendingReview request.
+- **FR-005**: An authorized Reviewer MUST be able to review any PendingReview request.
 - **FR-006**: An authorized Reviewer MUST be able to approve a PendingReview request, changing it to Approved.
 - **FR-007**: An authorized Reviewer MUST be able to request changes on a PendingReview request, changing it to
-  ChangesRequested.
+  ChangesRequested. A reason or comment MUST be provided.
 - **FR-008**: A Requester MUST be able to edit their own ChangesRequested request and resubmit it, changing it to
   PendingReview.
 - **FR-009**: System MUST prevent a Requester from editing an Approved request.
@@ -129,6 +142,11 @@ Invalid edits, transitions, identities, and stale updates are rejected without p
   newer changes.
 - **FR-014**: Rejected operations MUST leave the Change Request and all related persisted business data unchanged.
 - **FR-015**: Authorization MUST be enforced through the system's server-side workflow rather than client-only checks.
+- **FR-016**: Request viewing MUST be restricted to the Requester and authorized Reviewers relevant to the request's workflow. Users authorized to view a request MUST be able to view all of its details. Lack of modification authorization MUST NOT hide or mask request details. Viewing a request MUST NOT grant permission to modify it.
+- **FR-017**: A Requester MUST NOT be able to modify a Change Request while it is in PendingReview.
+- **FR-018**: If a Requester's or Reviewer's role or permission is revoked, pending-state operations by that user MUST be suspended immediately and the request state MUST remain unchanged.
+- **FR-019**: Approved requests MUST NOT be revoked or reopened.
+- **FR-020**: A Requester MUST NOT be able to delete a Change Request while it is in Draft.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -136,7 +154,7 @@ Invalid edits, transitions, identities, and stale updates are rejected without p
   identity, and current status.
 - **Requester**: A user who creates Change Requests and is permitted to edit and submit requests they own in
   supported states.
-- **Reviewer**: A user authorized to review PendingReview requests and approve them or request changes.
+- **Reviewer**: A user authorized to review PendingReview requests and approve or request changes for them.
 - **Lifecycle State**: Draft, PendingReview, Approved, or ChangesRequested. It represents the Change Request's
   current position in the controlled workflow.
 
@@ -146,30 +164,21 @@ Invalid edits, transitions, identities, and stale updates are rejected without p
 
 - **SC-002**: 100% of valid approvals change exactly one eligible PendingReview request to Approved; the action
   cannot be repeated on that approved request.
-- **SC-003**: 100% of valid request-changes actions change exactly one eligible PendingReview request to
-  ChangesRequested and preserve the Requester's ability to revise it according to approved product rules.
+- **SC-003**: 100% of valid request-changes actions change exactly one eligible PendingReview request to ChangesRequested, after which its Requester can edit and resubmit it to PendingReview.
 - **SC-004**: 100% of attempted self-approvals are rejected, including when the caller holds both roles.
 - **SC-005**: 100% of attempted edits to Approved requests are rejected without changing request content or status.
 - **SC-006**: 100% of unsupported state transitions are rejected, and the request remains in its prior state.
+- **SC-009**: 100% of rejected PendingReview edit attempts leave the request unchanged.
 - **SC-007**: 100% of stale concurrent updates are identified and rejected, with no silent overwrite of newer data.
 - **SC-008**: 100% of rejected operations preserve the complete previously persisted Change Request and related
   business data.
+- **SC-010**: 100% of attempts to revoke or reopen an Approved request are rejected.
+- **SC-011**: 100% of Draft deletion attempts by Requesters are rejected and leave the Draft unchanged.
+- **SC-012**: 100% of view-authorized but modification-unauthorized users can view all details of an eligible Change Request while 100% of their modification attempts are rejected.
+- **SC-013**: 100% of attempts to request changes without a non-empty reason or comment are rejected, leaving the request unchanged.
 
 ## Assumptions
 
 - A Requester has an authenticated identity and can create only for their own identity.
 - Rejected operations return a clear failure outcome that distinguishes authorization, state, and stale-update failures.
 - The system does not include a frontend or implementation-specific HTTP presentation details in this specification.
-
-## Unresolved Product Questions
-
-The following decisions are unresolved and MUST be confirmed before relevant scope is implemented:
-
-1. Can a Requester delete a Draft?
-2. Can a Requester view only their own requests, or can authorized users view other requests?
-3. Is a Reviewer permitted to review all requests or only an assigned subset?
-4. Is a reason or comment mandatory when a Reviewer requests changes?
-5. Can a Requester modify a PendingReview request before receiving a ChangesRequested result?
-6. Can an Approved request ever be revoked or reopened?
-7. What should happen when a user's role or permission is revoked while a request is pending?
-8. What information should be visible to users who are not authorized to modify a request?
