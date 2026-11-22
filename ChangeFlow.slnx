@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/ChangeFlow.Api/ChangeFlow.Api.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ChangeFlow.Api.Tests/ChangeFlow.Api.Tests.csproj" />
+  </Folder>
 </Solution>
