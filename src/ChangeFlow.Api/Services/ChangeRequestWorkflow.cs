@@ -59,7 +59,8 @@ public sealed class ChangeRequestWorkflow(
             throw new ChangeFlowProblemException(404, "NotFound", "Not found", "The Change Request was not found or is not viewable.");
 
         var requesterOrReviewer = request.RequesterId == callerId ||
-            await HasActivePermissionAsync(db, callerId, PermissionCapability.Reviewer, cancellationToken);
+            (request.Status == ChangeRequestStatus.PendingReview &&
+             await HasActivePermissionAsync(db, callerId, PermissionCapability.Reviewer, cancellationToken));
 
         if (!requesterOrReviewer)
             throw new ChangeFlowProblemException(404, "NotFound", "Not found", "The Change Request was not found or is not viewable.");

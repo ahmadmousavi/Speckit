@@ -28,6 +28,8 @@ public sealed class PermissionRevocationTests : IClassFixture<ChangeFlowWebAppli
 
         await store.RestoreAsync(DevelopmentSeed.RequesterOnlyId, PermissionCapability.Requester);
 
+        db.ChangeTracker.Clear();
+
         var restored = await db.Permissions.FindAsync(
             DevelopmentSeed.RequesterOnlyId,
             PermissionCapability.Requester);

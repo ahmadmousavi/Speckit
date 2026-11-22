@@ -24,11 +24,15 @@ public sealed class ViewAuthorizationTests : IClassFixture<ChangeFlowWebApplicat
             { title = "Visibility", description = "Full details", reason = "Original reason" });
         var request = await created.Content.ReadFromJsonAsync<ChangeRequestResponse>();
 
+        var requesterReviewSubmit = await requester.PostAsJsonAsync($"/change-requests/{request!.Id}/submit",
+            new { concurrencyToken = request.ConcurrencyToken });
+        Assert.Equal(HttpStatusCode.OK, requesterReviewSubmit.StatusCode);
+
         var reviewer = _factory.CreateClient();
         var reviewerToken = await IssueTokenAsync(reviewer, DevelopmentSeed.ReviewerOnlyId);
         reviewer.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", reviewerToken);
 
-        var get = await reviewer.GetAsync($"/change-requests/{request!.Id}");
+        var get = await reviewer.GetAsync($"/change-requests/{request.Id}");
         Assert.Equal(HttpStatusCode.OK, get.StatusCode);
         var view = await get.Content.ReadFromJsonAsync<ChangeRequestResponse>();
         Assert.Equal(request.Title, view!.Title);

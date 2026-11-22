@@ -196,3 +196,17 @@
 - User-story phases contain complete independently testable increments.
 - External/bypass permission changes are explicitly outside the transaction guarantee.
 - Reviewer visibility outside PendingReview remains blocked pending human product clarification.
+
+---
+
+## Phase 8: Convergence
+
+- [x] T058 CRITICAL: Route `PermissionStore` revocation and restoration through the explicit immediate Microsoft.Data.Sqlite transaction path used by state-changing operations so permission and mutation changes are serialized per FR-018 and Constitution III/IV (contradicts).
+- [x] T059 [US4] Restrict Reviewer visibility to the already approved PendingReview scope and block view behavior for states outside PendingReview instead of allowing all status values per FR-005/FR-016 and plan: View Authorization Scope (partial).
+- [x] T060 Review and remove or justify the unapproved 200-character `ChangeRequest.Title` limit in `ChangeFlowDbContext` per data-model.md and the simplicity constitution principle (unrequested).
+
+## Phase 9: Convergence
+
+- [ ] T061 [US2] Add a dual-role Requester and Reviewer test proving own-request approval is rejected per FR-010 and SC-004 (partial).
+- [ ] T062 [US4] Add tests proving mutation-before-revocation and revocation-before-mutation ordering through the coordinated immediate transaction path per FR-018 (partial).
+- [ ] T063 Remove or justify the unrequested template WeatherForecast and UnitTest1 artifacts per plan scope and Constitution I (unrequested).

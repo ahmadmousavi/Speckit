@@ -15,7 +15,7 @@ public sealed class ChangeFlowDbContext(DbContextOptions<ChangeFlowDbContext> op
         {
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Id).ValueGeneratedNever();
-            entity.Property(x => x.Title).IsRequired().HasMaxLength(200);
+            entity.Property(x => x.Title).IsRequired();
             entity.Property(x => x.Description).IsRequired();
             entity.Property(x => x.Reason).IsRequired();
             entity.Property(x => x.LastChangeRequestComment);
