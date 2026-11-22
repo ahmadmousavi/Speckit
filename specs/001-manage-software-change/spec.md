@@ -144,7 +144,7 @@ Invalid edits, transitions, identities, and stale updates are rejected without p
 - **FR-015**: Authorization MUST be enforced through the system's server-side workflow rather than client-only checks.
 - **FR-016**: Request viewing MUST be restricted to the Requester and authorized Reviewers relevant to the request's workflow. Users authorized to view a request MUST be able to view all of its details. Lack of modification authorization MUST NOT hide or mask request details. Viewing a request MUST NOT grant permission to modify it.
 - **FR-017**: A Requester MUST NOT be able to modify a Change Request while it is in PendingReview.
-- **FR-018**: If a Requester's or Reviewer's role or permission is revoked, pending-state operations by that user MUST be suspended immediately and the request state MUST remain unchanged.
+- **FR-018**: If a Requester's or Reviewer's role or permission is revoked, a mutation that starts after the revocation commits MUST observe the revoked permission and be rejected. If a mutation successfully commits before permission revocation is committed, that mutation may succeed. Rejected mutations MUST leave the request state unchanged.
 - **FR-019**: Approved requests MUST NOT be revoked or reopened.
 - **FR-020**: A Requester MUST NOT be able to delete a Change Request while it is in Draft.
 

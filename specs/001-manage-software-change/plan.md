@@ -132,15 +132,11 @@ commit, or roll back.
 No separate `ChangeFlowMutationLock` table is required. The immediate transaction itself is the write serialization mechanism.
 
 If revocation commits first, a later state-changing transaction acquires the writer reservation and sees `RevokedAt`, then
-rejects. If a state-changing mutation commits first, a later revocation is ordered after the mutation and revocation cannot
-retroactively cancel it. Operations made through this same database and coordinated transaction path are linearized by the
-single SQLite writer. This guarantee does not extend to permission rows changed by an external database connection that
-bypasses the coordinated transaction path.
+rejects. If a state-changing mutation commits first, the later revocation is ordered after the mutation and revocation cannot
+retroactively cancel it. Mutations that start after revocation commits observe the revoked permission and are rejected.
+Operations made through this same database and coordinated transaction path are linearized by the single SQLite writer.
 
-For SQLite busy/locked outcomes, configure a bounded busy timeout and map transient `SQLiteBusy`/`SQLiteLocked` failures to a
-retry of the entire state-changing or revocation transaction. Reopening and re-beginning a new immediate transaction must be
-performed for each retry; re-executing only the failed SQL statement is not sufficient. A finite retry count is used, and a
-terminal locked outcome returns an explicit conflict or retryable server problem without partial changes.
+For SQLite busy/locked outcomes, configure a bounded busy timeout of 5 seconds and map transient `SQLiteBusy`/`SQLiteLocked` failures to a retry of the entire state-changing or revocation transaction. Reopening and re-beginning a new immediate transaction must be performed for each retry; re-executing only the failed SQL statement is not sufficient. Allow a maximum of 3 total attempts (the initial attempt plus 2 retries). A terminal locked outcome after 3 attempts returns an explicit conflict or retryable server problem without partial changes.
 
 Permission revocation is not an API capability unless it is later added to the product specification. It is currently an
 out-of-band administrative/database operation that must use the same coordinated transaction method described above.

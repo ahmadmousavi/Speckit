@@ -68,9 +68,7 @@ first, a later mutation sees `RevokedAt` and rejects. If a mutation commits firs
 it and cannot retroactively cancel the mutation. The guarantee applies only to permission changes performed through this
 same database and coordinated transaction path. External writes that bypass this path are outside the guarantee.
 
-For SQLite busy/locked failures, configure a bounded busy timeout and retry the entire transaction with a new immediate
-transaction. Do not retry only the failed statement. A terminal locked outcome returns an explicit retryable server or
-conflict problem and makes no partial changes.
+For SQLite busy/locked failures, configure a bounded busy timeout of 5 seconds and retry the entire transaction with a new immediate transaction. Do not retry only the failed statement. Allow a maximum of 3 total attempts (the initial attempt plus 2 retries). A terminal locked outcome after 3 attempts returns an explicit retryable server or conflict problem and makes no partial changes.
 
 ## Concurrency
 
